@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import BloodAI from './bloodAI';
-
+import './App.css';
 // Tafsiri za Lugha (Language Translations Dictionary)
 const translations = {
   sw: {
@@ -263,6 +262,8 @@ function App() {
   const [selectedFacility, setSelectedFacility] = useState(healthFacilitiesData[0]);
   const [currentLang, setCurrentLang] = useState('sw'); // Language state (sw / eng)
   const t = translations[currentLang]; // Active translations dictionary
+  const [adminAuthenticated, setAdminAuthenticated] = useState(false);
+  const [adminPasswordInput, setAdminPasswordInput] = useState('');
 
   // Selected Media for Full Screen Modal Preview
   const [activeModalMedia, setActiveModalMedia] = useState(null);
@@ -817,86 +818,134 @@ function App() {
         </main>
       )}
 
-      {/* ADMIN DASHBOARD PAGE */}
+      {/* ADMIN DASHBOARD PAGE WITH PASSWORD PROTECTION */}
       {page === 'admin' && (
         <main className="admin-wrapper">
-          <div className="admin-header-box">
-            <span className="red-sub">CENTRAL COMMAND HUB</span>
-            <h1>🛡️ Admin Control Dashboard</h1>
-            <div className="sec-pills">
-              <span className="sec-pill green">🔑 MFA: ACTIVE</span>
-              <span className="sec-pill purple">🔒 AES-256: ENCRYPTED</span>
-            </div>
-          </div>
-          <div className="admin-stock-control-box">
-            <h3>📊 Usimamizi wa Units za Damu (Blood Stock Units Control)</h3>
-            <div className="admin-stock-grid">
-              {Object.entries(bloodStockUnits).map(([grp, count]) => (
-                <div key={grp} className="stock-edit-card">
-                  <strong>{grp}</strong>
+          {!adminAuthenticated ? (
+            <div className="portal-container" style={{ maxWidth: '400px', margin: '50px auto', textAlign: 'center' }}>
+              <span className="red-sub">RESTRICTED ACCESS</span>
+              <h2 style={{ color: '#fff', margin: '10px 0 20px 0' }}>🛡️ Ingiza Admin Password</h2>
+              <p style={{ color: '#a1a1aa', fontSize: '13px', marginBottom: '20px' }}>Tafadhali weka neno la siri la kituo kikuu ili uweze kufungua Admin Command Hub.</p>
+              
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                // Weka password unayoitaka hapa (Mfano: bloodlink2026 au admin123)
+                if (adminPasswordInput === 'bloodlink2026') {
+                  setAdminAuthenticated(true);
+                  alert("Umefanikiwa kuingia kwenye Admin Dashboard!");
+                } else {
+                  alert("⚠️ Password siyo sahihi! Tafadhali jaribu tena.");
+                  setAdminPasswordInput('');
+                }
+              }} className="modern-form">
+                <div className="field">
                   <input 
-                    type="number" 
-                    value={count} 
-                    onChange={(e) => setBloodStockUnits({...bloodStockUnits, [grp]: parseInt(e.target.value) || 0})}
+                    type="password" 
+                    placeholder="Weka Admin Password..." 
+                    value={adminPasswordInput} 
+                    onChange={e => setAdminPasswordInput(e.target.value)} 
+                    required 
+                    style={{ textAlign: 'center', fontSize: '16px', letterSpacing: '2px' }}
                   />
-                  <small>Units</small>
                 </div>
-              ))}
+                <button type="submit" className="btn-red-main full-width" style={{ marginTop: '10px' }}>Fungua Dashboard 🔓</button>
+              </form>
             </div>
-          </div>
-          <div className="admin-media-manager">
-            <h3>📁 Upakiaji wa Faili, Picha, Video, au URL Link</h3>
-            <form onSubmit={handleMediaUpload} className="admin-img-form">
-              <div className="form-group-row">
-                <input 
-                  type="text" 
-                  placeholder="Kichwa cha Habari / Picha" 
-                  value={uploadForm.title} 
-                  onChange={e => setUploadForm({...uploadForm, title: e.target.value})} 
-                  required 
-                />
-                <select 
-                  value={uploadForm.type} 
-                  onChange={e => setUploadForm({...uploadForm, type: e.target.value})}
+          ) : (
+            <div>
+              <div className="admin-header-box" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <span className="red-sub">CENTRAL COMMAND HUB</span>
+                  <h1>🛡️ Admin Control Dashboard</h1>
+                </div>
+                <button 
+                  onClick={() => setAdminAuthenticated(false)} 
+                  style={{ background: '#1f2833', color: '#ff2a3b', border: '1px solid #ff2a3b', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
                 >
-                  <option value="image">Picha (Image URL)</option>
-                  <option value="video">Video (Video URL)</option>
-                </select>
+                  🔒 Logout Admin
+                </button>
               </div>
-              <div className="form-group-row">
-                <input 
-                  type="url" 
-                  placeholder="Ingiza URL Link au File path" 
-                  value={uploadForm.url} 
-                  onChange={e => setUploadForm({...uploadForm, url: e.target.value})} 
-                  required 
-                />
-                <input 
-                  type="text" 
-                  placeholder="Maelezo mafupi (Caption)" 
-                  value={uploadForm.caption} 
-                  onChange={e => setUploadForm({...uploadForm, caption: e.target.value})} 
-                />
+
+              <div className="sec-pills" style={{ marginBottom: '20px' }}>
+                <span className="sec-pill green">🔑 MFA: ACTIVE</span>
+                <span className="sec-pill purple">🔒 AES-256: ENCRYPTED</span>
               </div>
-              <button type="submit" className="btn-add-img">+ Hifadhi na Chapisha Kwenye Webpage</button>
-            </form>
-            <div className="admin-image-list">
-              <h4>Maudhui Yaliyopo (Active Media):</h4>
-              <div className="admin-img-grid">
-                {galleryMedia.map(m => (
-                  <div key={m.id} className="admin-img-card">
-                    {m.type === 'video' ? <video src={m.url}></video> : <img src={m.url} alt={m.title} />}
-                    <div className="admin-img-info">
-                      <strong>{m.title}</strong>
-                      <button className="btn-del-img" onClick={() => handleDeleteMedia(m.id)}>Futa</button>
+
+              {/* Blood Stock Units Units Control */}
+              <div className="admin-stock-control-box">
+                <h3>📊 Usimamizi wa Units za Damu (Blood Stock Units Control)</h3>
+                <div className="admin-stock-grid">
+                  {Object.entries(bloodStockUnits).map(([grp, count]) => (
+                    <div key={grp} className="stock-edit-card">
+                      <strong>{grp}</strong>
+                      <input 
+                        type="number" 
+                        value={count} 
+                        onChange={(e) => setBloodStockUnits({...bloodStockUnits, [grp]: parseInt(e.target.value) || 0})}
+                      />
+                      <small>Units</small>
                     </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Admin Media & File Upload Manager */}
+              <div className="admin-media-manager">
+                <h3>📁 Upakiaji wa Faili, Picha, Video, au URL Link</h3>
+                <form onSubmit={handleMediaUpload} className="admin-img-form">
+                  <div className="form-group-row">
+                    <input 
+                      type="text" 
+                      placeholder="Kichwa cha Habari / Picha" 
+                      value={uploadForm.title} 
+                      onChange={e => setUploadForm({...uploadForm, title: e.target.value})} 
+                      required 
+                    />
+                    <select 
+                      value={uploadForm.type} 
+                      onChange={e => setUploadForm({...uploadForm, type: e.target.value})}
+                    >
+                      <option value="image">Picha (Image URL)</option>
+                      <option value="video">Video (Video URL)</option>
+                    </select>
                   </div>
-                ))}
+                  <div className="form-group-row">
+                    <input 
+                      type="url" 
+                      placeholder="Ingiza URL Link au File path" 
+                      value={uploadForm.url} 
+                      onChange={e => setUploadForm({...uploadForm, url: e.target.value})} 
+                      required 
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="Maelezo mafupi (Caption)" 
+                      value={uploadForm.caption} 
+                      onChange={e => setUploadForm({...uploadForm, caption: e.target.value})} 
+                    />
+                  </div>
+                  <button type="submit" className="btn-add-img">+ Hifadhi na Chapisha Kwenye Webpage</button>
+                </form>
+                <div className="admin-image-list">
+                  <h4>Maudhui Yaliyopo (Active Media):</h4>
+                  <div className="admin-img-grid">
+                    {galleryMedia.map(m => (
+                      <div key={m.id} className="admin-img-card">
+                        {m.type === 'video' ? <video src={m.url}></video> : <img src={m.url} alt={m.title} />}
+                        <div className="admin-img-info">
+                          <strong>{m.title}</strong>
+                          <button className="btn-del-img" onClick={() => handleDeleteMedia(m.id)}>Futa</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </main>
       )}
+
 
       {/* Footer */}
       <footer className="main-footer">
