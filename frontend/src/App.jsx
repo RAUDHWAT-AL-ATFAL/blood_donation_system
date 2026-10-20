@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './App.css';
-
+import BloodAI from './bloodAI';
 // Master Translations Dictionary
 const translations = {
   sw: {
@@ -789,6 +789,7 @@ function App() {
               </div>
             </div>
           )}
+          <BloodAI />
         </main>
       )}
 
