@@ -1,6 +1,93 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import BloodAI from './bloodAI';
+
+// Tafsiri za Lugha (Language Translations Dictionary)
+const translations = {
+  sw: {
+    navHome: "Nyumbani",
+    navDonor: "Mtoaji Damu",
+    navRequest: "Omba Damu",
+    navAdmin: "Admin Dashboard",
+    joinUs: "♥ Jiunge na Sisi",
+    installApp: "📱 Sakinisha App",
+    heroPill: "MFUMO WA KIMATAIFA WA KUOKOA MAISHA",
+    heroTitlePart1: "Kila Doti.",
+    heroTitlePart2: "Kila Maisha.",
+    heroSubtext: "Mtandao wa kisasa zaidi, wenye usalama wa kiwango cha juu cha encryption unaounganisha watoaji wa damu waliosajiliwa na hospitali zilizothibitishwa kwa haraka na uwazi.",
+    btnMember: "♥ Mwanachama Mtoaji →",
+    btnRequest: "+ Omba Damu Sasa",
+    secVerify: "Official Healthcare Verification Protocol • Hospital Auth Token Required",
+    liveFlow: "LIVE BLOOD FLOW MONITORING",
+    liveEmergency: "🚨 Live Emergency Requests (Maombi ya Dharura)",
+    newRequestBtn: "+ Tuma Ombi Jipya",
+    unitsNeeded: "Chupa Zinazohitajika:",
+    respondBtn: "♥ Jibu & Changa",
+    mediaGalleryTag: "ADMIN-VERIFIED MEDIA GALLERY",
+    mediaGalleryTitle: "📸 Matukio, Picha na Video za Uchangiwa Damu",
+    managedAdmin: "🔒 Managed Exclusively by Admin",
+    clickToView: "🔍 Bonyeza Kuangalia",
+    liveReserve: "📈 LIVE BLOOD RESERVE (Akiba ya Benki ya Damu)",
+    secureSync: "SECURE SYNC",
+    compatibilityTitle: "Kikokotoo cha Utangamano wa Damu (Blood Compatibility)",
+    compatibilitySub: "Chagua kundi la damu kuona nani unaweza kumpa au kupokea kutoka kwake.",
+    canDonateTo: "➔ CAN DONATE BLOOD TO",
+    canReceiveFrom: "♥ CAN RECEIVE BLOOD FROM",
+    eduTitle: "📚 Elimu ya Afya na Vigezo vya Kuchangia Damu",
+    donorCriteriaTitle: "✅ Vigezo Kuu vya Mchangiaji Damu",
+    ageText: "Umri: Miaka 18 hadi 65.",
+    weightText: "Uzito: Siyo chini ya Kilogramu 50 (50kg).",
+    healthText: "Hali ya Afya: Uwe mzima bila magonjwa sugu ya kuambukiza kupitia damu.",
+    durationText: "Muda: Angalau miezi 3 tangu uchangie mara ya mwisho.",
+    benefitsTitle: "🌟 Faida za Afya za Kuchangia Damu",
+    heartBenefit: "Afya ya Moyo: Inapunguza madini ya chuma yaliyozidi mwilini.",
+    cellsBenefit: "Seli Mpya: Mwili huchochewa kutengeneza damu mpya na safi.",
+    checkupBenefit: "Vipimo vya Bure: Hupata vipimo kamili vya afya yako.",
+    facilityTitle: "🏥 Mawasiliano ya Vituo vya Afya Vilivyosajiliwa"
+  },
+  eng: {
+    navHome: "Home",
+    navDonor: "Blood Donor",
+    navRequest: "Request Blood",
+    navAdmin: "Admin Dashboard",
+    joinUs: "♥ Join Us",
+    installApp: "📱 Install App",
+    heroPill: "INTERNATIONAL LIFE-SAVING SYSTEM",
+    heroTitlePart1: "Every Drop.",
+    heroTitlePart2: "Every Life.",
+    heroSubtext: "The most advanced, high-security encrypted network connecting registered blood donors with verified hospitals instantly and transparently.",
+    btnMember: "♥ Donor Member →",
+    btnRequest: "+ Request Blood Now",
+    secVerify: "Official Healthcare Verification Protocol • Hospital Auth Token Required",
+    liveFlow: "LIVE BLOOD FLOW MONITORING",
+    liveEmergency: "🚨 Live Emergency Requests",
+    newRequestBtn: "+ New Request",
+    unitsNeeded: "Units Needed:",
+    respondBtn: "♥ Respond & Donate",
+    mediaGalleryTag: "ADMIN-VERIFIED MEDIA GALLERY",
+    mediaGalleryTitle: "📸 Blood Donation Events, Photos & Videos",
+    managedAdmin: "🔒 Managed Exclusively by Admin",
+    clickToView: "🔍 Click to View Full Screen",
+    liveReserve: "📈 LIVE BLOOD RESERVE",
+    secureSync: "SECURE SYNC",
+    compatibilityTitle: "Blood Compatibility Calculator",
+    compatibilitySub: "Select a blood group to see donation and receiving matches.",
+    canDonateTo: "➔ CAN DONATE BLOOD TO",
+    canReceiveFrom: "♥ CAN RECEIVE BLOOD FROM",
+    eduTitle: "📚 Health Education & Donor Guidelines",
+    donorCriteriaTitle: "✅ Main Blood Donor Criteria",
+    ageText: "Age: 18 to 65 years old.",
+    weightText: "Weight: Not less than 50 kilograms (50kg).",
+    healthText: "Health Status: Healthy without chronic blood-borne infections.",
+    durationText: "Duration: At least 3 months since your last donation.",
+    benefitsTitle: "🌟 Health Benefits of Donating Blood",
+    heartBenefit: "Heart Health: Reduces excess iron levels in the body.",
+    cellsBenefit: "New Cells: Stimulates the body to produce fresh, new blood.",
+    checkupBenefit: "Free Screenings: Receive complete health screenings.",
+    facilityTitle: "🏥 Registered Health Facilities Directory"
+  }
+};
+
 // Default Gallery & Media Uploads Managed by Admin
 const defaultAdminGallery = [
   {
@@ -66,7 +153,7 @@ const bloodCompatibilityMatrix = {
   "AB+": { give: ["AB+"], receive: ["O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+"] }
 };
 
-// PROFESSIONAL BLOOD AI ASSISTANT COMPONENT (Powered by Groq API)
+// PROFESSIONAL BLOOD AI ASSISTANT COMPONENT
 function BloodAIComponent() {
   const [messages, setMessages] = useState([
     { role: 'assistant', content: '👋 Habari! Mimi ni **BloodLink AI**, mtaalamu wako wa afya na uchangiaji damu. 🩸 Je, una swali gani kuhusu afya, makundi ya damu, au mahitaji ya dharura leo? 🏥' }
@@ -77,14 +164,11 @@ function BloodAIComponent() {
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
-
     const userMsg = inputMessage;
     setInputMessage('');
     setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
     setLoading(true);
-
     const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-
     if (!apiKey) {
       setTimeout(() => {
         setMessages(prev => [...prev, { 
@@ -95,7 +179,6 @@ function BloodAIComponent() {
       }, 1000);
       return;
     }
-
     try {
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
@@ -116,7 +199,6 @@ function BloodAIComponent() {
           temperature: 0.7
         })
       });
-
       const data = await response.json();
       if (data.choices && data.choices[0]) {
         const aiReply = data.choices[0].message.content;
@@ -161,7 +243,6 @@ function BloodAIComponent() {
         ))}
         {loading && <div style={{ color: '#45a29e', fontStyle: 'italic' }}>🩺 AI inachakata swali lako kwa umakini...</div>}
       </div>
-
       <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '10px' }}>
         <input 
           type="text" 
@@ -177,9 +258,14 @@ function BloodAIComponent() {
 }
 
 function App() {
-  const [page, setPage] = useState('home'); // home, donor, request, admin
+  const [page, setPage] = useState('home'); 
   const [selectedGroup, setSelectedGroup] = useState('O-');
   const [selectedFacility, setSelectedFacility] = useState(healthFacilitiesData[0]);
+  const [currentLang, setCurrentLang] = useState('sw'); // Language state (sw / eng)
+  const t = translations[currentLang]; // Active translations dictionary
+
+  // Selected Media for Full Screen Modal Preview
+  const [activeModalMedia, setActiveModalMedia] = useState(null);
   
   // PWA Install States
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -191,7 +277,6 @@ function App() {
       setDeferredPrompt(e);
       setShowInstallBanner(true);
     };
-
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
   }, []);
@@ -207,13 +292,11 @@ function App() {
     setShowInstallBanner(false);
   };
 
-  // Live Emergency Requests State
   const [liveRequests, setLiveRequests] = useState([
     { id: "REQ-01", hospital: "Muhimbili National Hospital", patient: "Fatuma Hassan", blood: "O-", units: 3, urgency: "CRITICAL", date: "2026-10-18 08:30" },
     { id: "REQ-02", hospital: "Mbeya Referral Hospital", patient: "Kelman M.", blood: "B+", units: 2, urgency: "URGENT", date: "2026-10-18 10:15" }
   ]);
 
-  // Blood Stock Units per Group (Admin Managed)
   const [bloodStockUnits, setBloodStockUnits] = useState({
     "A+": 42, "A-": 12,
     "B+": 38, "B-": 8,
@@ -221,15 +304,12 @@ function App() {
     "O+": 85, "O-": 14
   });
 
-  // Gallery & Media Upload State
   const [galleryMedia, setGalleryMedia] = useState(defaultAdminGallery);
   const [uploadForm, setUploadForm] = useState({ title: '', type: 'image', url: '', category: 'Community Drive', caption: '' });
-
-  // Donor Registration State
+  
   const [donorForm, setDonorForm] = useState({ name: '', phone: '', email: '', location: 'Dar es Salaam', blood: 'O+', weight: '', agreed: false });
   const [registeredCard, setRegisteredCard] = useState(null);
 
-  // Handle Admin Media Upload
   const handleMediaUpload = (e) => {
     e.preventDefault();
     if (!uploadForm.title || !uploadForm.url) {
@@ -255,7 +335,6 @@ function App() {
     }
   };
 
-  // Handle Donor Form Submit
   const handleDonorSubmit = (e) => {
     e.preventDefault();
     if (!donorForm.agreed) {
@@ -276,7 +355,7 @@ function App() {
 
   return (
     <div className="app-container">
-      {/* Top Encryption & Alert Bar */}
+      {/* Top Encryption & Alert Bar with Functional Language Switcher */}
       <div className="top-status-bar">
         <div className="enc-badge">
           <span className="lock-icon">🛡️</span> 256-BIT AES ENCRYPTION ACTIVE
@@ -285,8 +364,18 @@ function App() {
           <span className="live-alert-tag">🔴 LIVE ALERT:</span> Muhimbili National Hospital needs 3 units of O- blood urgently!
         </div>
         <div className="lang-switcher">
-          <button className="lang-btn active">SWA</button>
-          <button className="lang-btn">ENG</button>
+          <button 
+            className={`lang-btn ${currentLang === 'sw' ? 'active' : ''}`} 
+            onClick={() => setCurrentLang('sw')}
+          >
+            SWA
+          </button>
+          <button 
+            className={`lang-btn ${currentLang === 'eng' ? 'active' : ''}`} 
+            onClick={() => setCurrentLang('eng')}
+          >
+            ENG
+          </button>
         </div>
       </div>
 
@@ -301,19 +390,19 @@ function App() {
           </div>
         </div>
         <nav className="nav-menu">
-          <button className={`nav-item ${page === 'home' ? 'active' : ''}`} onClick={() => setPage('home')}>Nyumbani</button>
-          <button className={`nav-item ${page === 'donor' ? 'active' : ''}`} onClick={() => setPage('donor')}>Mtoaji Damu</button>
-          <button className={`nav-item ${page === 'request' ? 'active' : ''}`} onClick={() => setPage('request')}>Omba Damu</button>
-          <button className={`nav-item ${page === 'admin' ? 'active' : ''}`} onClick={() => setPage('admin')}>Admin Dashboard</button>
+          <button className={`nav-item ${page === 'home' ? 'active' : ''}`} onClick={() => setPage('home')}>{t.navHome}</button>
+          <button className={`nav-item ${page === 'donor' ? 'active' : ''}`} onClick={() => setPage('donor')}>{t.navDonor}</button>
+          <button className={`nav-item ${page === 'request' ? 'active' : ''}`} onClick={() => setPage('request')}>{t.navRequest}</button>
+          <button className={`nav-item ${page === 'admin' ? 'active' : ''}`} onClick={() => setPage('admin')}>{t.navAdmin}</button>
         </nav>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           {showInstallBanner && (
             <button className="cta-join-btn" onClick={handleInstallClick} style={{ background: '#00F5D4', color: '#0B0C10' }}>
-              📱 Install App
+              {t.installApp}
             </button>
           )}
           <button className="cta-join-btn" onClick={() => setPage('donor')}>
-            ♥ Jiunge na Sisi
+            {t.joinUs}
           </button>
         </div>
       </header>
@@ -348,43 +437,42 @@ function App() {
           {/* Hero Banner */}
           <section className="hero-banner">
             <div className="system-pill">
-              <span className="red-dot"></span> MFUMO WA KIMATAIFA WA KUOKOA MAISHA
+              <span className="red-dot"></span> {t.heroPill}
             </div>
             
             <h1 className="hero-title">
-              Kila Doti.<br />
-              <span className="red-title">Kila Maisha.</span>
+              {t.heroTitlePart1}<br />
+              <span className="red-title">{t.heroTitlePart2}</span>
             </h1>
             <p className="hero-subtext">
-              Mtandao wa kisasa zaidi, wenye usalama wa kiwango cha juu cha encryption unaounganisha watoaji wa damu waliosajiliwa na hospitali zilizothibitishwa kwa haraka na uwazi.
+              {t.heroSubtext}
             </p>
             <div className="hero-buttons">
               <button className="btn-red-main" onClick={() => setPage('donor')}>
-                ♥ Mwanachama Mtoaji →
+                {t.btnMember}
               </button>
               <button className="btn-dark-outline" onClick={() => setPage('request')}>
-                + Omba Damu Sasa
+                {t.btnRequest}
               </button>
             </div>
             <div className="verification-text">
-              🛡️ Official Healthcare Verification Protocol • Hospital Auth Token Required
+              {t.secVerify}
             </div>
-            {/* Breathing Blood Drop Component */}
             <div className="breathing-drop-container">
               <div className="breathing-blood-drop">
                 <span className="drop-icon">🩸</span>
                 <div className="pulse-wave wave1"></div>
                 <div className="pulse-wave wave2"></div>
               </div>
-              <div className="drop-label">LIVE BLOOD FLOW MONITORING</div>
+              <div className="drop-label">{t.liveFlow}</div>
             </div>
           </section>
 
           {/* LIVE EMERGENCY REQUESTS SECTION */}
           <section className="live-requests-section">
             <div className="section-head">
-              <h2>🚨 Live Emergency Requests (Maombi ya Dharura)</h2>
-              <button className="btn-small-glow" onClick={() => setPage('request')}>+ Tuma Ombi Jipya</button>
+              <h2>{t.liveEmergency}</h2>
+              <button className="btn-small-glow" onClick={() => setPage('request')}>{t.newRequestBtn}</button>
             </div>
             <div className="requests-grid">
               {liveRequests.map((req) => (
@@ -395,50 +483,95 @@ function App() {
                   </div>
                   <h3>{req.hospital}</h3>
                   <p>📍 Mgonjwa: <strong>{req.patient}</strong></p>
-                  <p className="units-info">Chupa Zinazohitajika: <strong>{req.units} Units</strong></p>
+                  <p className="units-info">{t.unitsNeeded} <strong>{req.units} Units</strong></p>
                   <div className="req-footer">
                     <small>{req.date}</small>
-                    <button className="btn-respond" onClick={() => setPage('donor')}>♥ Jibu & Changa</button>
+                    <button className="btn-respond" onClick={() => setPage('donor')}>{t.respondBtn}</button>
                   </div>
                 </div>
               ))}
             </div>
           </section>
 
-          {/* Dynamic Gallery & Media Showcase */}
-          <section className="image-showcase-section">
-            <div className="section-header-flex">
+          {/* RESPONSIVE MEDIA GALLERY WITH FULL SCREEN PREVIEW MODAL */}
+          <section className="image-showcase-section" style={{ padding: '40px 20px', maxWidth: '1200px', margin: '0 auto' }}>
+            <div className="section-header-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '30px', flexWrap: 'wrap', gap: '15px' }}>
               <div>
-                <span className="gold-sub">ADMIN-VERIFIED MEDIA GALLERY</span>
-                <h2>📸 Matukio, Picha na Video za Uchangiwa Damu</h2>
+                <span className="gold-sub" style={{ color: '#66fcf1', fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px' }}>{t.mediaGalleryTag}</span>
+                <h2 style={{ color: '#fff', fontSize: '28px', marginTop: '5px' }}>{t.mediaGalleryTitle}</h2>
               </div>
-              <small className="managed-badge">🔒 Managed Exclusively by Admin</small>
+              <small className="managed-badge" style={{ color: '#c5c6c7', background: '#1f2833', padding: '6px 12px', borderRadius: '8px', border: '1px solid #45a29e' }}>{t.managedAdmin}</small>
             </div>
-            <div className="gallery-grid">
+
+            {/* Responsive Grid Layout: 1 col on mobile, 2 on tablet, 3 on desktop */}
+            <div className="gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '25px' }}>
               {galleryMedia.map((media) => (
-                <div key={media.id} className="gallery-card">
-                  <div className="img-wrapper">
+                <div 
+                  key={media.id} 
+                  onClick={() => setActiveModalMedia(media)}
+                  className="gallery-card" 
+                  style={{ background: '#121620', border: '1px solid #1f2833', borderRadius: '16px', overflow: 'hidden', cursor: 'pointer', transition: 'transform 0.3s ease, border-color 0.3s ease', display: 'flex', flexDirection: 'column' }}
+                >
+                  {/* Top Image / Video Container (Large and clean) */}
+                  <div className="img-wrapper" style={{ width: '100%', height: '240px', background: '#000', position: 'relative', overflow: 'hidden' }}>
                     {media.type === 'video' ? (
-                      <video src={media.url} controls className="gallery-img"></video>
+                      <video src={media.url} className="gallery-img" style={{ width: '100%', height: '100%', objectFit: 'cover' }}></video>
                     ) : (
-                      <img src={media.url} alt={media.title} className="gallery-img" />
+                      <img src={media.url} alt={media.title} className="gallery-img" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     )}
-                    <span className="img-category-tag">{media.category}</span>
+                    <span className="img-category-tag" style={{ position: 'absolute', top: '12px', left: '12px', background: 'rgba(0,0,0,0.7)', color: '#66fcf1', fontSize: '11px', padding: '4px 10px', borderRadius: '6px', fontWeight: 'bold' }}>{media.category}</span>
                   </div>
-                  <div className="gallery-card-body">
-                    <h3>{media.title}</h3>
-                    <p>{media.caption}</p>
+                  
+                  {/* Bottom Text Area */}
+                  <div className="gallery-card-body" style={{ padding: '20px', display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
+                    <div>
+                      <h3 style={{ color: '#fff', fontSize: '18px', marginBottom: '8px' }}>{media.title}</h3>
+                      <p style={{ color: '#c5c6c7', fontSize: '14px', lineHeight: '1.5' }}>{media.caption}</p>
+                    </div>
+                    <div style={{ marginTop: '15px', color: '#66fcf1', fontSize: '12px', fontWeight: '600' }}>{t.clickToView}</div>
                   </div>
                 </div>
               ))}
             </div>
           </section>
+
+          {/* FULL SCREEN MODAL PREVIEW FOR MEDIA */}
+          {activeModalMedia && (
+            <div 
+              onClick={() => setActiveModalMedia(null)}
+              style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.9)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+            >
+              <div 
+                onClick={(e) => e.stopPropagation()} 
+                style={{ background: '#121620', border: '1px solid #45a29e', borderRadius: '20px', maxWidth: '800px', width: '100%', overflow: 'hidden', position: 'relative', boxShadow: '0 20px 50px rgba(0,0,0,0.8)' }}
+              >
+                <button 
+                  onClick={() => setActiveModalMedia(null)}
+                  style={{ position: 'absolute', top: '15px', right: '15px', background: '#ff4d4d', color: '#fff', border: 'none', width: '36px', height: '36px', borderRadius: '50%', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer', zIndex: 10 }}
+                >
+                  ✕
+                </button>
+                <div style={{ width: '100%', maxHeight: '60vh', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {activeModalMedia.type === 'video' ? (
+                    <video src={activeModalMedia.url} controls autoPlay style={{ width: '100%', maxHeight: '60vh', objectFit: 'contain' }}></video>
+                  ) : (
+                    <img src={activeModalMedia.url} alt={activeModalMedia.title} style={{ width: '100%', maxHeight: '60vh', objectFit: 'contain' }} />
+                  )}
+                </div>
+                <div style={{ padding: '25px' }}>
+                  <span style={{ color: '#66fcf1', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase' }}>{activeModalMedia.category}</span>
+                  <h2 style={{ color: '#fff', fontSize: '24px', margin: '8px 0 12px 0' }}>{activeModalMedia.title}</h2>
+                  <p style={{ color: '#c5c6c7', fontSize: '15px', lineHeight: '1.6' }}>{activeModalMedia.caption}</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Live Reserve Counter */}
           <section className="live-reserve-box">
             <div className="section-head">
-              <h2>📈 LIVE BLOOD RESERVE (Akiba ya Benki ya Damu)</h2>
-              <span className="sync-badge">SECURE SYNC</span>
+              <h2>{t.liveReserve}</h2>
+              <span className="sync-badge">{t.secureSync}</span>
             </div>
             <div className="reserve-grid">
               {Object.entries(bloodStockUnits).map(([grp, count]) => (
@@ -453,8 +586,8 @@ function App() {
           {/* Blood Compatibility Calculator */}
           <section className="compatibility-section">
             <div className="pill-header">🩸 BIOLOGICAL MATCH MATRIX</div>
-            <h2>Kikokotoo cha Utangamano wa Damu (Blood Compatibility)</h2>
-            <p>Chagua kundi la damu kuona nani unaweza kumpa au kupokea kutoka kwake.</p>
+            <h2>{t.compatibilityTitle}</h2>
+            <p>{t.compatibilitySub}</p>
             <div className="group-selector-grid">
               {Object.keys(bloodCompatibilityMatrix).map((grp) => (
                 <button
@@ -468,7 +601,7 @@ function App() {
             </div>
             <div className="matrix-results">
               <div className="result-card">
-                <h3>➔ CAN DONATE BLOOD TO ({selectedGroup})</h3>
+                <h3>➔ {t.canDonateTo} ({selectedGroup})</h3>
                 <div className="tags-container">
                   {bloodCompatibilityMatrix[selectedGroup].give.map(g => (
                     <span key={g} className="match-tag give">{g}</span>
@@ -476,7 +609,7 @@ function App() {
                 </div>
               </div>
               <div className="result-card">
-                <h3>♥ CAN RECEIVE BLOOD FROM ({selectedGroup})</h3>
+                <h3>♥ {t.canReceiveFrom} ({selectedGroup})</h3>
                 <div className="tags-container">
                   {bloodCompatibilityMatrix[selectedGroup].receive.map(r => (
                     <span key={r} className="match-tag receive">{r}</span>
@@ -488,23 +621,23 @@ function App() {
 
           {/* Educational Guidance & Benefits Section */}
           <section className="education-section">
-            <h2 className="section-title-center">📚 Elimu ya Afya na Vigezo vya Kuchangia Damu</h2>
+            <h2 className="section-title-center">{t.eduTitle}</h2>
             <div className="edu-grid">
               <div className="edu-card">
-                <h3>✅ Vigezo Kuu vya Mchangiaji Damu</h3>
+                <h3>{t.donorCriteriaTitle}</h3>
                 <ul>
-                  <li><strong>Umri:</strong> Miaka 18 hadi 65.</li>
-                  <li><strong>Uzito:</strong> Siyo chini ya Kilogramu 50 (50kg).</li>
-                  <li><strong>Hali ya Afya:</strong> Uwe mzima bila magonjwa sugu ya kuambukiza kupitia damu.</li>
-                  <li><strong>Muda:</strong> Angalau miezi 3 tangu uchangie mara ya mwisho.</li>
+                  <li><strong>{t.ageText.split(':')[0]}:</strong> {t.ageText.split(':')[1]}</li>
+                  <li><strong>{t.weightText.split(':')[0]}:</strong> {t.weightText.split(':')[1]}</li>
+                  <li><strong>{t.healthText.split(':')[0]}:</strong> {t.healthText.split(':')[1]}</li>
+                  <li><strong>{t.durationText.split(':')[0]}:</strong> {t.durationText.split(':')[1]}</li>
                 </ul>
               </div>
               <div className="edu-card highlight-border">
-                <h3>🌟 Faida za Afya za Kuchangia Damu</h3>
+                <h3>{t.benefitsTitle}</h3>
                 <ul>
-                  <li><strong>Afya ya Moyo:</strong> Inapunguza madini ya chuma yaliyozidi mwilini.</li>
-                  <li><strong>Seli Mpya:</strong> Mwili huchochewa kutengeneza damu mpya na safi.</li>
-                  <li><strong>Vipimo vya Bure:</strong> Hupata vipimo kamili vya afya yako.</li>
+                  <li><strong>{t.heartBenefit.split(':')[0]}:</strong> {t.heartBenefit.split(':')[1]}</li>
+                  <li><strong>{t.cellsBenefit.split(':')[0]}:</strong> {t.cellsBenefit.split(':')[1]}</li>
+                  <li><strong>{t.checkupBenefit.split(':')[0]}:</strong> {t.checkupBenefit.split(':')[1]}</li>
                 </ul>
               </div>
             </div>
@@ -512,7 +645,7 @@ function App() {
 
           {/* Directory of Registered Health Facilities */}
           <section className="directory-section">
-            <h2>🏥 Mawasiliano ya Vituo vya Afya Vilivyosajiliwa</h2>
+            <h2>{t.facilityTitle}</h2>
             <div className="facility-picker">
               {healthFacilitiesData.map(fac => (
                 <button
@@ -640,7 +773,7 @@ function App() {
                       checked={donorForm.agreed} 
                       onChange={e => setDonorForm({...donorForm, agreed: e.target.checked})} 
                     />
-                    I confirm that all provided data is true and I consent to voluntary blood donation[span_1](start_span)[span_1](end_span).
+                    I confirm that all provided data is true and I consent to voluntary blood donation[span_2](start_span)[span_2](end_span).
                   </label>
                 </div>
                 <button type="submit" className="btn-red-main full-width">Complete Donor Registration</button>
@@ -695,7 +828,6 @@ function App() {
               <span className="sec-pill purple">🔒 AES-256: ENCRYPTED</span>
             </div>
           </div>
-          {/* Blood Stock Units Units Control */}
           <div className="admin-stock-control-box">
             <h3>📊 Usimamizi wa Units za Damu (Blood Stock Units Control)</h3>
             <div className="admin-stock-grid">
@@ -712,7 +844,6 @@ function App() {
               ))}
             </div>
           </div>
-          {/* Admin Media & File Upload Manager */}
           <div className="admin-media-manager">
             <h3>📁 Upakiaji wa Faili, Picha, Video, au URL Link</h3>
             <form onSubmit={handleMediaUpload} className="admin-img-form">
