@@ -1,8 +1,55 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import BloodAI from './BloodAI';
-import BloodlinkSplash from './BloodlinkSplash';
-// Tafsiri za Lugha (Language Translations Dictionary)
+importBloodAI  from './BloodAI';
+
+// ----------------------------------------------------
+// 1. SPLASH SCREEN COMPONENT (Rangi & Picha Rasmi)
+// ----------------------------------------------------
+function BloodlinkSplash({ onFinish }) {
+  const [progress, setProgress] = useState(0);
+  const [statusText, setStatusText] = useState('Inaanza mifumo ya uokoaji...');
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            if (onFinish) onFinish();
+          }, 400);
+          return 100;
+        }
+        
+        if (prev > 75) setStatusText('Tayari kuokoa maisha...');
+        else if (prev > 40) setStatusText('Inounganisha na Supabase & Groq AI...');
+        else if (prev > 15) setStatusText('Inapakia miundombinu ya PWA...');
+
+        return prev + 5;
+      });
+    }, 60);
+
+    return () => clearInterval(interval);
+  }, [onFinish]);
+
+  return (
+    <div className="splash-overlay">
+      <div className="splash-content">
+        <p className="splash-tagline">Toa Damu, Okoa Maisha</p>
+        <div className="progress-container">
+          <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+        </div>
+        <div className="splash-status">
+          <span>{statusText}</span>
+          <span className="gold-text">{progress}%</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ----------------------------------------------------
+// TAFSIRI ZA LUGHA (SWA / ENG)
+// ----------------------------------------------------
 const translations = {
   sw: {
     navHome: "Nyumbani",
@@ -88,7 +135,6 @@ const translations = {
   }
 };
 
-// Default Gallery & Media Uploads Managed by Admin
 const defaultAdminGallery = [
   {
     id: 1,
@@ -108,7 +154,6 @@ const defaultAdminGallery = [
   }
 ];
 
-// Health Facilities Directory
 const healthFacilitiesData = [
   {
     id: "HOSP-001",
@@ -160,6 +205,7 @@ function BloodAIComponent() {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
@@ -256,19 +302,23 @@ function BloodAIComponent() {
   );
 }
 
+// ----------------------------------------------------
+// 2. MAIN APP COMPONENT
+// ----------------------------------------------------
 function App() {
+  const [showSplash, setShowSplash] = useState(true);
   const [page, setPage] = useState('home'); 
   const [selectedGroup, setSelectedGroup] = useState('O-');
   const [selectedFacility, setSelectedFacility] = useState(healthFacilitiesData[0]);
-  const [currentLang, setCurrentLang] = useState('sw'); // Language state (sw / eng)
-  const t = translations[currentLang]; // Active translations dictionary
-  const [adminAuthenticated, setAdminAuthenticated] = useState(false);
-  const [adminPasswordInput, setAdminPasswordInput] = useState('');
-  const [showSplash, setShowSplash] = useState(true)
-
-  // Selected Media for Full Screen Modal Preview
+  const [currentLang, setCurrentLang] = useState('sw');
+  const t = translations[currentLang];
   const [activeModalMedia, setActiveModalMedia] = useState(null);
   
+  // ADMIN SECURITY AUTHENTICATION STATES
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  const [adminPinInput, setAdminPinInput] = useState('');
+  const [adminPinError, setAdminPinError] = useState(false);
+
   // PWA Install States
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallBanner, setShowInstallBanner] = useState(false);
@@ -298,19 +348,28 @@ function App() {
     { id: "REQ-01", hospital: "Muhimbili National Hospital", patient: "Fatuma Hassan", blood: "O-", units: 3, urgency: "CRITICAL", date: "2026-10-18 08:30" },
     { id: "REQ-02", hospital: "Mbeya Referral Hospital", patient: "Kelman M.", blood: "B+", units: 2, urgency: "URGENT", date: "2026-10-18 10:15" }
   ]);
-
   const [bloodStockUnits, setBloodStockUnits] = useState({
     "A+": 42, "A-": 12,
     "B+": 38, "B-": 8,
     "AB+": 19, "AB-": 5,
     "O+": 85, "O-": 14
   });
-
   const [galleryMedia, setGalleryMedia] = useState(defaultAdminGallery);
   const [uploadForm, setUploadForm] = useState({ title: '', type: 'image', url: '', category: 'Community Drive', caption: '' });
   
   const [donorForm, setDonorForm] = useState({ name: '', phone: '', email: '', location: 'Dar es Salaam', blood: 'O+', weight: '', agreed: false });
   const [registeredCard, setRegisteredCard] = useState(null);
+
+  const handleAdminLogin = (e) => {
+    e.preventDefault();
+    if (adminPinInput === '1234') {
+      setIsAdminAuthenticated(true);
+      setAdminPinError(false);
+    } else {
+      setAdminPinError(true);
+      setAdminPinInput('');
+    }
+  };
 
   const handleMediaUpload = (e) => {
     e.preventDefault();
@@ -354,12 +413,15 @@ function App() {
     setRegisteredCard(cardData);
     alert("Hongera! Umejiunga rasmi na Familia ya BLOODLINK.");
   };
-    if (showSplash) {
-       return <BloodlinkSplash onFinish={() => setShowSplash(false)} />;
-    }
+
+  // Ikiwa Splash Screen bado inasoma, isionyeshe Mfumo Mkuu kwanza
+  if (showSplash) {
+    return <BloodlinkSplash onFinish={() => setShowSplash(false)} />;
+  }
+
   return (
     <div className="app-container">
-      {/* Top Encryption & Alert Bar with Functional Language Switcher */}
+      {/* Top Encryption & Alert Bar */}
       <div className="top-status-bar">
         <div className="enc-badge">
           <span className="lock-icon">🛡️</span> 256-BIT AES ENCRYPTION ACTIVE
@@ -411,39 +473,13 @@ function App() {
         </div>
       </header>
 
-      {/* RIGHT SIDE FLOATING PWA INSTALL POP-UP */}
-      {showInstallBanner && (
-        <div style={{
-          position: 'fixed',
-          bottom: '30px',
-          right: '30px',
-          background: '#1f2833',
-          border: '2px solid #66fcf1',
-          padding: '20px',
-          borderRadius: '14px',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.6)',
-          zIndex: 9999,
-          maxWidth: '320px',
-          animation: 'slideInRight 0.5s ease-out'
-        }}>
-          <h4 style={{ color: '#66fcf1', margin: '0 0 8px 0' }}>📱 Sakinisha BloodLink App</h4>
-          <p style={{ color: '#c5c6c7', fontSize: '13px', margin: '0 0 14px 0' }}>Pata ufikiaji wa haraka na utumie mfumo hata bila intaneti kwenye simu yako!</p>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button onClick={handleInstallClick} style={{ background: '#66fcf1', color: '#0b0c10', border: 'none', padding: '8px 14px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', flex: 1 }}>Sakinisha Sasa</button>
-            <button onClick={() => setShowInstallBanner(false)} style={{ background: 'transparent', color: '#fff', border: '1px solid #c5c6c7', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer' }}>Baadaye</button>
-          </div>
-        </div>
-      )}
-
       {/* HOME PAGE */}
       {page === 'home' && (
         <main className="home-wrapper">
-          {/* Hero Banner */}
           <section className="hero-banner">
             <div className="system-pill">
               <span className="red-dot"></span> {t.heroPill}
             </div>
-            
             <h1 className="hero-title">
               {t.heroTitlePart1}<br />
               <span className="red-title">{t.heroTitlePart2}</span>
@@ -472,7 +508,7 @@ function App() {
             </div>
           </section>
 
-          {/* LIVE EMERGENCY REQUESTS SECTION */}
+          {/* LIVE EMERGENCY REQUESTS */}
           <section className="live-requests-section">
             <div className="section-head">
               <h2>{t.liveEmergency}</h2>
@@ -497,7 +533,7 @@ function App() {
             </div>
           </section>
 
-          {/* RESPONSIVE MEDIA GALLERY WITH FULL SCREEN PREVIEW MODAL */}
+          {/* MEDIA GALLERY */}
           <section className="image-showcase-section" style={{ padding: '40px 20px', maxWidth: '1200px', margin: '0 auto' }}>
             <div className="section-header-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '30px', flexWrap: 'wrap', gap: '15px' }}>
               <div>
@@ -506,8 +542,6 @@ function App() {
               </div>
               <small className="managed-badge" style={{ color: '#c5c6c7', background: '#1f2833', padding: '6px 12px', borderRadius: '8px', border: '1px solid #45a29e' }}>{t.managedAdmin}</small>
             </div>
-
-            {/* Responsive Grid Layout: 1 col on mobile, 2 on tablet, 3 on desktop */}
             <div className="gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '25px' }}>
               {galleryMedia.map((media) => (
                 <div 
@@ -516,7 +550,6 @@ function App() {
                   className="gallery-card" 
                   style={{ background: '#121620', border: '1px solid #1f2833', borderRadius: '16px', overflow: 'hidden', cursor: 'pointer', transition: 'transform 0.3s ease, border-color 0.3s ease', display: 'flex', flexDirection: 'column' }}
                 >
-                  {/* Top Image / Video Container (Large and clean) */}
                   <div className="img-wrapper" style={{ width: '100%', height: '240px', background: '#000', position: 'relative', overflow: 'hidden' }}>
                     {media.type === 'video' ? (
                       <video src={media.url} className="gallery-img" style={{ width: '100%', height: '100%', objectFit: 'cover' }}></video>
@@ -525,8 +558,6 @@ function App() {
                     )}
                     <span className="img-category-tag" style={{ position: 'absolute', top: '12px', left: '12px', background: 'rgba(0,0,0,0.7)', color: '#66fcf1', fontSize: '11px', padding: '4px 10px', borderRadius: '6px', fontWeight: 'bold' }}>{media.category}</span>
                   </div>
-                  
-                  {/* Bottom Text Area */}
                   <div className="gallery-card-body" style={{ padding: '20px', display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
                     <div>
                       <h3 style={{ color: '#fff', fontSize: '18px', marginBottom: '8px' }}>{media.title}</h3>
@@ -539,7 +570,7 @@ function App() {
             </div>
           </section>
 
-          {/* FULL SCREEN MODAL PREVIEW FOR MEDIA */}
+          {/* FULL SCREEN MODAL */}
           {activeModalMedia && (
             <div 
               onClick={() => setActiveModalMedia(null)}
@@ -571,7 +602,7 @@ function App() {
             </div>
           )}
 
-          {/* Live Reserve Counter */}
+          {/* LIVE RESERVE COUNTER */}
           <section className="live-reserve-box">
             <div className="section-head">
               <h2>{t.liveReserve}</h2>
@@ -587,7 +618,7 @@ function App() {
             </div>
           </section>
 
-          {/* Blood Compatibility Calculator */}
+          {/* COMPATIBILITY CALCULATOR */}
           <section className="compatibility-section">
             <div className="pill-header">🩸 BIOLOGICAL MATCH MATRIX</div>
             <h2>{t.compatibilityTitle}</h2>
@@ -623,7 +654,7 @@ function App() {
             </div>
           </section>
 
-          {/* Educational Guidance & Benefits Section */}
+          {/* EDUCATIONAL GUIDANCE */}
           <section className="education-section">
             <h2 className="section-title-center">{t.eduTitle}</h2>
             <div className="edu-grid">
@@ -647,7 +678,7 @@ function App() {
             </div>
           </section>
 
-          {/* Directory of Registered Health Facilities */}
+          {/* HEALTH FACILITIES DIRECTORY */}
           <section className="directory-section">
             <h2>{t.facilityTitle}</h2>
             <div className="facility-picker">
@@ -680,12 +711,11 @@ function App() {
             )}
           </section>
 
-          {/* AI ASSISTANT PLACED AT THE VERY BOTTOM OF HOMEPAGE */}
           <BloodAIComponent />
         </main>
       )}
 
-      {/* DONOR REGISTRATION PORTAL PAGE */}
+      {/* DONOR REGISTRATION PAGE */}
       {page === 'donor' && (
         <main className="form-page">
           <div className="portal-container">
@@ -693,7 +723,7 @@ function App() {
             <div className="portal-header">
               <span className="red-sub">DONOR PORTAL</span>
               <h1>Usajili wa Mtoaji Damu (Donor Registration)</h1>
-              <p>Ulinzi wa Taarifa: Data zote zinalindwa kwa usimbaji wa hali ya juu wa AES-256 Bit na kufuata miongozo ya HIPAA/GDPR.</p>
+              <p>Ulinzi wa Taarifa: Data zote zinalindwa kwa usimbaji wa hali ya juu wa AES-256 Bit.</p>
             </div>
             {registeredCard ? (
               <div className="donor-pass-card">
@@ -708,32 +738,15 @@ function App() {
               <form onSubmit={handleDonorSubmit} className="modern-form">
                 <div className="field">
                   <label>Full Name *</label>
-                  <input 
-                    type="text" 
-                    placeholder="e.g. Baraka Hassan" 
-                    required 
-                    value={donorForm.name} 
-                    onChange={e => setDonorForm({...donorForm, name: e.target.value})} 
-                  />
+                  <input type="text" placeholder="e.g. Baraka Hassan" required value={donorForm.name} onChange={e => setDonorForm({...donorForm, name: e.target.value})} />
                 </div>
                 <div className="field">
                   <label>Phone Number *</label>
-                  <input 
-                    type="tel" 
-                    placeholder="+255 7XX XXX XXX" 
-                    required 
-                    value={donorForm.phone} 
-                    onChange={e => setDonorForm({...donorForm, phone: e.target.value})} 
-                  />
+                  <input type="tel" placeholder="+255 7XX XXX XXX" required value={donorForm.phone} onChange={e => setDonorForm({...donorForm, phone: e.target.value})} />
                 </div>
                 <div className="field">
                   <label>Email Address</label>
-                  <input 
-                    type="email" 
-                    placeholder="baraka@example.com" 
-                    value={donorForm.email} 
-                    onChange={e => setDonorForm({...donorForm, email: e.target.value})} 
-                  />
+                  <input type="email" placeholder="baraka@example.com" value={donorForm.email} onChange={e => setDonorForm({...donorForm, email: e.target.value})} />
                 </div>
                 <div className="field">
                   <label>Location / Region *</label>
@@ -759,25 +772,13 @@ function App() {
                 </div>
                 <div className="field">
                   <label>Weight (kg) *</label>
-                  <input 
-                    type="number" 
-                    min="50" 
-                    placeholder="e.g. 65" 
-                    required 
-                    value={donorForm.weight} 
-                    onChange={e => setDonorForm({...donorForm, weight: e.target.value})} 
-                  />
+                  <input type="number" min="50" placeholder="e.g. 65" required value={donorForm.weight} onChange={e => setDonorForm({...donorForm, weight: e.target.value})} />
                 </div>
                 <div className="medical-checklist-box">
                   <h4>🛡️ MEDICAL ELIGIBILITY CHECKLIST</h4>
                   <label className="checkbox-label">
-                    <input 
-                      type="checkbox" 
-                      required 
-                      checked={donorForm.agreed} 
-                      onChange={e => setDonorForm({...donorForm, agreed: e.target.checked})} 
-                    />
-                    I confirm that all provided data is true and I consent to voluntary blood donation[span_2](start_span)[span_2](end_span).
+                    <input type="checkbox" required checked={donorForm.agreed} onChange={e => setDonorForm({...donorForm, agreed: e.target.checked})} />
+                    I confirm that all provided data is true and I consent to voluntary blood donation[span_0](start_span)[span_0](end_span).
                   </label>
                 </div>
                 <button type="submit" className="btn-red-main full-width">Complete Donor Registration</button>
@@ -821,60 +822,53 @@ function App() {
         </main>
       )}
 
-      {/* ADMIN DASHBOARD PAGE WITH PASSWORD PROTECTION */}
+      {/* ADMIN DASHBOARD PAGE WITH SECURE PIN LOCK */}
       {page === 'admin' && (
         <main className="admin-wrapper">
-          {!adminAuthenticated ? (
-            <div className="portal-container" style={{ maxWidth: '400px', margin: '50px auto', textAlign: 'center' }}>
-              <span className="red-sub">RESTRICTED ACCESS</span>
-              <h2 style={{ color: '#fff', margin: '10px 0 20px 0' }}>🛡️ Ingiza Admin Password</h2>
-              <p style={{ color: '#a1a1aa', fontSize: '13px', marginBottom: '20px' }}>Tafadhali weka neno la siri la kituo kikuu ili uweze kufungua Admin Command Hub.</p>
-              
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                // Weka password unayoitaka hapa (Mfano: bloodlink2026 au admin123)
-                if (adminPasswordInput === 'bloodlink2026') {
-                  setAdminAuthenticated(true);
-                  alert("Umefanikiwa kuingia kwenye Admin Dashboard!");
-                } else {
-                  alert("⚠️ Password siyo sahihi! Tafadhali jaribu tena.");
-                  setAdminPasswordInput('');
-                }
-              }} className="modern-form">
+          {!isAdminAuthenticated ? (
+            <div className="portal-container" style={{ maxWidth: '450px', margin: '50px auto', textAlign: 'center' }}>
+              <div className="portal-header">
+                <span className="red-sub">RESTRICTED AREA</span>
+                <h1>🛡️ Admin Security Login</h1>
+                <p>Ingiza nenosiri la siri (PIN) la ulinzi ili kufungua mfumo wa usimamizi wa Admin. (PIN chaguomsingi ni: <strong>1234</strong>)</p>
+              </div>
+              <form onSubmit={handleAdminLogin} className="modern-form">
                 <div className="field">
+                  <label>Admin Secure PIN *</label>
                   <input 
                     type="password" 
-                    placeholder="Weka Admin Password..." 
-                    value={adminPasswordInput} 
-                    onChange={e => setAdminPasswordInput(e.target.value)} 
+                    placeholder="Weka PIN (mf. 1234)" 
+                    value={adminPinInput} 
+                    onChange={e => setAdminPinInput(e.target.value)} 
                     required 
-                    style={{ textAlign: 'center', fontSize: '16px', letterSpacing: '2px' }}
+                    style={{ textAlign: 'center', fontSize: '20px', letterSpacing: '4px' }}
                   />
                 </div>
+                {adminPinError && (
+                  <p style={{ color: '#ff4d4d', fontSize: '13px', margin: '5px 0' }}>❌ PIN si sahihi! Jaribu tena.</p>
+                )}
                 <button type="submit" className="btn-red-main full-width" style={{ marginTop: '10px' }}>Fungua Dashboard 🔓</button>
               </form>
             </div>
           ) : (
             <div>
-              <div className="admin-header-box" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="admin-header-box" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
                 <div>
                   <span className="red-sub">CENTRAL COMMAND HUB</span>
                   <h1>🛡️ Admin Control Dashboard</h1>
+                  <div className="sec-pills">
+                    <span className="sec-pill green">🔑 AUTHENTICATED</span>
+                    <span className="sec-pill purple">🔒 AES-256: SECURE</span>
+                  </div>
                 </div>
                 <button 
-                  onClick={() => setAdminAuthenticated(false)} 
-                  style={{ background: '#1f2833', color: '#ff2a3b', border: '1px solid #ff2a3b', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                  onClick={() => setIsAdminAuthenticated(false)} 
+                  style={{ background: '#ff4d4d', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
                 >
-                  🔒 Logout Admin
+                  Funga Otomatiki (Lock Out) 🔒
                 </button>
               </div>
 
-              <div className="sec-pills" style={{ marginBottom: '20px' }}>
-                <span className="sec-pill green">🔑 MFA: ACTIVE</span>
-                <span className="sec-pill purple">🔒 AES-256: ENCRYPTED</span>
-              </div>
-
-              {/* Blood Stock Units Units Control */}
               <div className="admin-stock-control-box">
                 <h3>📊 Usimamizi wa Units za Damu (Blood Stock Units Control)</h3>
                 <div className="admin-stock-grid">
@@ -892,7 +886,6 @@ function App() {
                 </div>
               </div>
 
-              {/* Admin Media & File Upload Manager */}
               <div className="admin-media-manager">
                 <h3>📁 Upakiaji wa Faili, Picha, Video, au URL Link</h3>
                 <form onSubmit={handleMediaUpload} className="admin-img-form">
@@ -948,7 +941,6 @@ function App() {
           )}
         </main>
       )}
-
 
       {/* Footer */}
       <footer className="main-footer">
