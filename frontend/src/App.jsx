@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import './App.css';
+import BloodAI from './BloodAI';
+import BloodlinkSplash from './BloodlinkSplash';
 // Tafsiri za Lugha (Language Translations Dictionary)
 const translations = {
   sw: {
@@ -159,7 +160,6 @@ function BloodAIComponent() {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
-
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
@@ -264,6 +264,7 @@ function App() {
   const t = translations[currentLang]; // Active translations dictionary
   const [adminAuthenticated, setAdminAuthenticated] = useState(false);
   const [adminPasswordInput, setAdminPasswordInput] = useState('');
+  const [showSplash, setShowSplash] = useState(true)
 
   // Selected Media for Full Screen Modal Preview
   const [activeModalMedia, setActiveModalMedia] = useState(null);
@@ -353,7 +354,9 @@ function App() {
     setRegisteredCard(cardData);
     alert("Hongera! Umejiunga rasmi na Familia ya BLOODLINK.");
   };
-
+    if (showSplash) {
+       return <BloodlinkSplash onFinish={() => setShowSplash(false)} />;
+    }
   return (
     <div className="app-container">
       {/* Top Encryption & Alert Bar with Functional Language Switcher */}
